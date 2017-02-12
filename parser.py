@@ -1,4 +1,5 @@
 import re
+import unicodedata
 from bs4 import BeautifulSoup
 
 
@@ -14,7 +15,9 @@ def extract_comittees_name_and_id(html):
 
 
 def clean_string(value):
-    return value.replace(u'\xa0', ' ').replace('\u00a0', ' ').strip().lower()
+    value = value.replace(u'\xa0', ' ').replace('\u00a0', ' ').strip().lower()
+    value = unicodedata.normalize('NFKD', value).encode('ASCII', 'ignore')
+    return value.decode("utf-8")
 
 
 def get_row_data(row):
@@ -102,6 +105,6 @@ def extract_club_detail(html, title):
     club_detail = extract_generic_detail(html, get_club_rows,
                                          club_details_end_condition)
     city, name, ffr_id = extract_club_city_name_and_ffr_id(title)
-    club_detail['nom'] = name
-    club_detail['ville'] = city
+    club_detail['nom'] = name.lower()
+    club_detail['ville'] = city.lower()
     return {ffr_id: club_detail}

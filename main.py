@@ -1,4 +1,5 @@
 import asyncio
+import json
 import tqdm
 from ffr import (send_request_to_ffr, extract_set_cookie, )
 from parser import (extract_comittees_name_and_id, extract_committee_detail,
@@ -11,7 +12,7 @@ async def get_club_detail(loop, sem, committee_id, club_name, club_id, cookie):
     async with sem:
         html, _ = await send_request_to_ffr(loop, {'ID_CLUB': club_id},
                                             {'cookie': cookie})
-        ffr_data[committee_id]['clubs'] = {**ffr_data[committee_id],
+        ffr_data[committee_id]['clubs'] = {**ffr_data[committee_id]['clubs'],
                                            **extract_club_detail(html,
                                                                  club_name)}
 
