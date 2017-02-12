@@ -1,9 +1,19 @@
 import asyncio
 import tqdm
 from ffr import (send_request_to_ffr, extract_set_cookie, )
-from parser import (extract_comittees_name_and_id, extract_committee_detail, )
+from parser import (extract_comittees_name_and_id, extract_committee_detail,
+                    extract_club_detail)
 
 ffr_data = {}
+
+
+async def get_club_detail(loop, sem, committee_id, club_name, club_id, cookie):
+    async with sem:
+        html, _ = await send_request_to_ffr(loop, {'ID_CLUB': club_id},
+                                            {'cookie': cookie})
+        ffr_data[committee_id]['clubs'] = {**ffr_data[committee_id],
+                                           **extract_club_detail(html,
+                                                                 club_name)}
 
 
 async def get_committee_detail(loop, committee_id):
@@ -23,8 +33,15 @@ async def get_committees_name_and_id(loop):
 
 
 async def wait_with_progress(coros):
+    results = []
     for f in tqdm.tqdm(asyncio.as_completed(coros), total=len(coros)):
-        await f
+        res = await f
+        try:
+            results += res
+        except TypeError:
+            results.append(res)
+    else:
+        return results
 
 
 if __name__ == "__main__":
@@ -32,7 +49,15 @@ if __name__ == "__main__":
 
     print("Retrieve the name and id of the committees.")
     loop.run_until_complete(asyncio.wait({get_committees_name_and_id(loop)}))
+    print("done \n")
 
     print("Retrieve the details of the committees.")
     detail_coros = {get_committee_detail(loop, id) for id in ffr_data.keys()}
-    loop.run_until_complete(wait_with_progress(detail_coros))
+    clubs = loop.run_until_complete(wait_with_progress(detail_coros))
+    print("done \n")
+
+    print("Retrieve the details of the clubs by committee.")
+    sem = asyncio.Semaphore(100)
+    clubs_coros = [get_club_detail(loop, sem, *club) for club in clubs]
+    loop.run_until_complete(wait_with_progress(clubs_coros))
+    print("done \n")
