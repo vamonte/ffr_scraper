@@ -62,3 +62,6 @@ if __name__ == "__main__":
     clubs_coros = [get_club_detail(loop, sem, *club) for club in clubs]
     loop.run_until_complete(wait_with_progress(clubs_coros))
     print("done \n")
+
+    with open('ffr.json', 'w') as f:
+        json.dump(ffr_data, f)
