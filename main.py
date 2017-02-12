@@ -30,7 +30,7 @@ async def get_committees_name_and_id(loop):
     html, _ = await send_request_to_ffr(loop)
     committees = extract_comittees_name_and_id(html)
     for _id, name in committees:
-        ffr_data[_id] = {'name': name, 'clubs': {}}
+        ffr_data[_id] = {'name': name.lower(), 'clubs': {}}
 
 
 async def wait_with_progress(coros):
